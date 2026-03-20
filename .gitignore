@@ -1,7 +1,7 @@
 .env
 __pycache__/
 *.pyc
-*.pkl
+# *.pkl  <-- intentionally NOT ignored; model files must be committed for deployment
 *.egg-info/
 .DS_Store
 venv/
