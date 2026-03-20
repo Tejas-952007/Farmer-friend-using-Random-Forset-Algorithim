@@ -18,52 +18,58 @@ st.title(t("title", lang))
 st.caption("किसान मित्र — AI-powered crop recommendation for Indian farmers 🇮🇳")
 
 # ── Live Weather ───────────────────────────────────────────────────
-st.sidebar.header("🌤 Live Weather")
-city = st.sidebar.text_input("Enter city", "Pune")
-if st.sidebar.button("Fetch Weather"):
+st.sidebar.header(t("live_weather", lang))
+city = st.sidebar.text_input(t("enter_city", lang), "Pune")
+if st.sidebar.button(t("fetch_weather", lang)):
     w = get_weather(city)
     if "error" in w:
         st.sidebar.error(w["error"])
     else:
-        st.sidebar.metric("🌡 Temperature (°C)", w["temperature"])
-        st.sidebar.metric("💧 Humidity (%)", w["humidity"])
+        st.sidebar.metric(t("temp_label", lang),  w["temperature"])
+        st.sidebar.metric(t("humid_label", lang),  w["humidity"])
         st.sidebar.info(w["description"])
 
 # ── Input Form ─────────────────────────────────────────────────────
 st.header(f"📋 {t('enter_farm', lang)}")
 col1, col2, col3 = st.columns(3)
 
+# Soil-type options translated
+soil_options   = ["loamy", "sandy", "clay"]
+soil_labels    = [t(s, lang) for s in soil_options]
+
 with col1:
     st.subheader(f"🌱 {t('soil', lang)}")
-    soil_type   = st.selectbox("Soil type", ["loamy", "sandy", "clay"])
-    N  = st.slider("Nitrogen (N)",    0,   140, 60)
-    P  = st.slider("Phosphorus (P)",  5,   145, 40)
-    K  = st.slider("Potassium (K)",   5,   205, 40)
-    ph = st.slider("Soil pH",        3.5,  9.5, 6.5, step=0.1)
+    soil_idx  = st.selectbox(t("soil_type", lang), range(len(soil_options)),
+                              format_func=lambda i: soil_labels[i])
+    soil_type = soil_options[soil_idx]
+    N  = st.slider(t("nitrogen",   lang),  0,   140, 60)
+    P  = st.slider(t("phosphorus", lang),  5,   145, 40)
+    K  = st.slider(t("potassium",  lang),  5,   205, 40)
+    ph = st.slider(t("soil_ph",    lang), 3.5,  9.5, 6.5, step=0.1)
 
 with col2:
     st.subheader(f"🌡 {t('weather', lang)}")
-    temperature = st.slider("Temperature (°C)", 8.0,  45.0, 25.0, step=0.5)
-    humidity    = st.slider("Humidity (%)",    10.0, 100.0, 65.0, step=0.5)
-    rainfall    = st.slider("Rainfall (mm)",   20.0, 300.0,100.0, step=5.0)
+    temperature = st.slider(t("temperature", lang),  8.0,  45.0, 25.0, step=0.5)
+    humidity    = st.slider(t("humidity",    lang), 10.0, 100.0, 65.0, step=0.5)
+    rainfall    = st.slider(t("rainfall",    lang), 20.0, 300.0,100.0, step=5.0)
 
 with col3:
     st.subheader(f"📍 {t('location', lang)}")
-    state = st.selectbox("State", [
+    state = st.selectbox(t("state", lang), [
         "Maharashtra","Punjab","Uttar Pradesh","Karnataka",
         "West Bengal","Madhya Pradesh","Andhra Pradesh",
         "Rajasthan","Tamil Nadu","Gujarat"
     ])
-    st.info("State-specific pricing & scheme data coming soon.")
+    st.info(t("state_info", lang))
 
 # ── Predict ────────────────────────────────────────────────────────
-if st.button("🔍 Get Crop Recommendation", use_container_width=True, type="primary"):
-    with st.spinner("Analysing your farm data..."):
+if st.button(t("predict_btn", lang), use_container_width=True, type="primary"):
+    with st.spinner(t("analysing", lang)):
         try:
             results = predict_crop(N, P, K, temperature, humidity, ph, rainfall, soil_type)
         except FileNotFoundError as e:
             st.error(str(e))
-            st.info("💡 Run `python scripts/train_model.py` from the project root to train the model first.")
+            st.info(t("train_hint", lang))
             st.stop()
         except Exception as e:
             st.error(f"Prediction failed: {e}")
@@ -76,9 +82,9 @@ if st.button("🔍 Get Crop Recommendation", use_container_width=True, type="pri
     st.header(f"✅ {t('best_crop', lang)}")
 
     r1, r2, r3 = st.columns(3)
-    r1.metric("🌾 Crop",                best["crop"].upper())
-    r2.metric(t("confidence", lang),    f"{best['confidence']}%")
-    r3.metric(t("fertilizer", lang),    advice["fertilizer"])
+    r1.metric("🌾 " + t("soil", lang),       best["crop"].upper())
+    r2.metric(t("confidence", lang),          f"{best['confidence']}%")
+    r3.metric(t("fertilizer", lang),          advice["fertilizer"])
     st.success(f"💡 **{t('tip', lang)}:** {advice['tip']}")
 
     # Alt crops
@@ -92,7 +98,7 @@ if st.button("🔍 Get Crop Recommendation", use_container_width=True, type="pri
                 st.write(f"**{t('tip',lang)}:** {adv['tip']}")
 
     # Bar chart
-    st.subheader("📊 Prediction Confidence")
+    st.subheader(t("chart_conf", lang))
     fig = go.Figure(go.Bar(
         x=[r["crop"].title() for r in results],
         y=[r["confidence"] for r in results],
@@ -100,15 +106,16 @@ if st.button("🔍 Get Crop Recommendation", use_container_width=True, type="pri
         text=[f"{r['confidence']}%" for r in results],
         textposition="outside"
     ))
-    fig.update_layout(yaxis_title="Confidence (%)", yaxis_range=[0,110],
+    fig.update_layout(yaxis_title=t("confidence", lang) + " (%)", yaxis_range=[0,110],
                       plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
     st.plotly_chart(fig, use_container_width=True)
 
     # Radar chart
-    st.subheader("🧪 Soil Nutrient Profile")
+    st.subheader(t("chart_soil", lang))
     radar = go.Figure(go.Scatterpolar(
         r=[N, P, K, ph*10, humidity, rainfall/10],
-        theta=["Nitrogen","Phosphorus","Potassium","pH×10","Humidity","Rainfall/10"],
+        theta=[t("nitrogen",lang), t("phosphorus",lang), t("potassium",lang),
+               "pH×10", t("humidity",lang), t("rainfall",lang)+"/10"],
         fill="toself", line_color="#388E3C"
     ))
     radar.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0,200])),
