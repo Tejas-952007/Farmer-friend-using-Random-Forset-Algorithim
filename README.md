@@ -47,4 +47,4 @@ streamlit run app/main.py
 `Python` · `scikit-learn` · `pandas` · `numpy` · `Streamlit` · `Plotly` · `OpenWeather API`
 
 ## Deployment
-Deployed on [Streamlit Cloud](https://share.streamlit.io) — free hosting, connects directly to GitHub.
+Deployed on [Streamlit Cloud](https://farmer-friend-using-random-forset-algorithim.streamlit.app/) — free hosting, connects directly to GitHub.
